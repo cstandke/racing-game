@@ -1,2 +1,5 @@
 # Ignore the "assets" folder
 assets/
+
+# Ignore the "backup" folder
+backup/
