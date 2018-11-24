@@ -17,9 +17,10 @@ class Car {
       x: startX,
       y: startY,
       dir: 180*Math.PI/180, //angle that the car is turned by
+      //dir:0,
       steer: 0, //left: negative, right: positive
       speed: 0,
-      engineBrake: -2,
+      engineBrake: -1,
       x_pointto: 0, 
       y_pointto: 0, 
      
@@ -29,6 +30,7 @@ class Car {
       x: startX,
       y: startY,
       visAngle:90*Math.PI/180,
+      //visAngle:0,
       dir: 0,
       width: 25,
       height: 50,
@@ -58,13 +60,18 @@ class Car {
 
   drawBox() {
     var point1=[this.vis.x,this.vis.y];
-    //var point2=[this.vis.x*Math.cos(this.phys.dir)+this.vis.y*Math.sin(this.phys.dir),
-    //  -this.vis.x*Math.sin(this.phys.dir)+this.vis.y*Math.cos(this.phys.dir)];
-    //var point3=[this.vis.x+this.vis.width,this.vis.y+this.vis.height];
-    //var point4=[this.vis.x+this.vis.width,this.vis.y];
-    return [point1];
-    //return [point1,point2];
-    //return [point1,point2,point3,point4];
+    //var point2=[this.vis.x+this.vis.height,this.vis.y];
+    //var point3=[this.vis.x+this.vis.height,this.vis.y-this.vis.width];
+    //var point4=[this.vis.x,this.vis.y-this.vis.width];
+  
+    var point2=[this.vis.x+(this.vis.width*Math.cos(this.vis.dir)),
+                this.vis.y+this.vis.width*Math.sin(this.vis.dir)];
+    var point3=[this.vis.x+(this.vis.width*Math.cos(this.vis.dir)-this.vis.height*Math.sin(this.vis.dir)),
+                this.vis.y+(this.vis.width*Math.sin(this.vis.dir)+this.vis.height*Math.cos(this.vis.dir))];
+    var point4=[this.vis.x+0*this.vis.width*Math.cos(this.vis.dir)-this.vis.height*Math.sin(this.vis.dir),
+                this.vis.y+0*this.vis.width*Math.sin(this.vis.dir)+this.vis.height*Math.cos(this.vis.dir)];
+  
+    return [point1,point2,point3,point4];
   }
 
   updateVis() {
@@ -109,18 +116,23 @@ class Car {
   steer(direction) {
     if (direction==="left") this.phys.steer=Math.max(this.dtr(-2.5),this.phys.steer-=this.dtr(0.5));
     else if (direction==="right") this.phys.steer=Math.min(this.dtr(2.5),this.phys.steer+=this.dtr(0.5));
-    //else this.phys.steer=0;
-    console.log("steer: "+this.phys.steer);
+    else {
+      if (this.phys.steer<0) this.phys.steer=Math.min(0,this.phys.steer+=this.dtr(0.2));
+      else this.phys.steer=Math.max(0,this.phys.steer-=this.dtr(0.2));
+    }
+    //console.log("steer: "+this.phys.steer);
   }
 
   move() {
+    this.checkKeys();
+    //if (!(this.phys.speed===0)) 
     this.rotate();
     
     this.phys.x = this.phys.x+this.phys.speed/this.speedDivider * Math.cos(this.phys.dir);
     this.phys.y = this.phys.y+this.phys.speed/this.speedDivider * Math.sin(this.phys.dir);
     
     this.updateVis();
-    // console.log("speed: "+this.phys.speed", accel: "+this.)
+    
   }
 
   getCurrentSpeed() {
@@ -130,6 +142,19 @@ class Car {
   checkOutOfBounds() {
     return 
   }
+
+  checkKeys(){
+    if (keyMap[37]) this.steer("left");
+    if (keyMap[39]) this.steer("right");
+    if (keyMap[38]) this.accelerate(5);    
+    if (keyMap[40]) this.accelerate(-5);
+
+    if (!(keyMap[37]&&keyMap[39])) this.steer("clear");
+    if (!(keyMap[38]&&keyMap[40])) this.accelerate(0);
+
+    //console.log(keyMap);
+  }
+
 } // End Class Car 
 
 window.onload = function() {
@@ -141,11 +166,6 @@ window.onload = function() {
   function updateCanvas() {
     ctx.clearRect(0, 0, 800, 600);
     ctx.drawImage(track.img, 0, 0);
-    
-    /* if (!(keyMap[37]&&keyMap[38]&&keyMap[39]&&keyMap[40])) {
-      playerCar.steer("clear");
-      playerCar.accelerate(0);
-     }*/
     ctx.save();
     playerCar.move();
     ctx.translate(playerCar.vis.x, playerCar.vis.y);
@@ -182,59 +202,12 @@ window.onload = function() {
   function startGame() {
     //var keyMap={37:false,38:false,39:false,40:false};
 
-    document.addEventListener('keypress', function(keyPressed){
-      if (keyPressed.keyCode in keyMap) {
-        keyMap[keyPressed.keyCode]=true;
-        if (keyMap[37]) {
-          playerCar.steer("left");
-          //playerCar.accelerate(0);
-        }
-        if (keyMap[39]) {
-          playerCar.steer("right");
-          //playerCar.accelerate(0);
-        }
-        if (keyMap[38]) {
-          //playerCar.steer("clear");
-          playerCar.accelerate(5);
-        } 
-        
-        if (keyMap[40]) {
-          //playerCar.steer("clear");
-          playerCar.accelerate(-5);
-        }
-        
-        //console.log(keyMap);
-        if (keyMap[37]&&keyMap[38]) {
-          playerCar.steer("left");
-          playerCar.accelerate(5);
-        }
-        if (keyMap[39]&&keyMap[38]) {
-          playerCar.steer("right");
-          playerCar.accelerate(5);
-        }
-        if (keyMap[37]&&keyMap[40]) {
-          playerCar.steer("left");
-          playerCar.accelerate(-5);
-        }
-        if (keyMap[37]&&keyMap[40]) {
-          playerCar.steer("left");
-          playerCar.accelerate(-5);
-        }
-
-      }
+    document.addEventListener('keydown', function(keyPressed){
+      if (keyPressed.keyCode in keyMap) keyMap[keyPressed.keyCode]=true;
     });
     
     document.addEventListener('keyup', function(keyPressed){
-      if (keyPressed.keyCode in keyMap) {
-        keyMap[keyPressed.keyCode]=false;
-        if (!(keyMap[37]||keyMap[39])) {
-          //playerCar.steer("clear");
-        //console.log(keyMap);
-        }
-        if (!(keyMap[38]||keyMap[40])) {
-          playerCar.accelerate(0);
-        }
-      }
+      if (keyPressed.keyCode in keyMap) keyMap[keyPressed.keyCode]=false;
     });
     window.requestAnimationFrame(updateCanvas);
   }
