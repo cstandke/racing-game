@@ -1,14 +1,28 @@
 
 
-var world = new SSCD.World({grid_size: 100});
+//var world = new SSCD.World({grid_size: });
+const debugMode = true;
+
+class TrackSector {
+  constructor(sectorName,x,y,lineX,lineY){
+  this.sectorName = sectorName;
+  this.x=x;
+  this.y=y;
+  this.lineX=lineX;
+  this.lineY=lineY;
+  this.collider;
+  }
+}
 
 class Track {
   constructor() {
     this.img = new Image();
-    this.img.src = "../images/racetrack.png";
-    this.sectorCount = 3;
+    this.img.src = "images/racetrack.png";
+    this.sectorCount = 4;
     this.lapsToDo = 5;
+    this.sectors = [new TrackSector("sector 1",80,315,130,0),new TrackSector("sector 2",370,375,0,130),new TrackSector("sector 3",590,315,130,0),new TrackSector("sector 4",390,115,0,130)];
   }
+
   addCollider() {
     this.centerCollider = world.add(new SSCD.Rectangle(new SSCD.Vector(210,250),new SSCD.Vector(380,120)));
     this.centerCollider.set_collision_tags(["track","boundary"]);
@@ -40,26 +54,43 @@ class Track {
 
     this.startLine = world.add(new SSCD.Line(new SSCD.Vector(370,115),new SSCD.Vector(0,130)));
     this.startLine.set_collision_tags(["track","line"]);
-    this.sector1 = world.add(new SSCD.Line(new SSCD.Vector(80,315),new SSCD.Vector(130,0)));
+    /* this.sector1 = world.add(new SSCD.Line(new SSCD.Vector(80,315),new SSCD.Vector(130,0)));
     this.sector1.set_collision_tags(["track","line"]);
     this.sector2 = world.add(new SSCD.Line(new SSCD.Vector(370,375),new SSCD.Vector(0,130)));
     this.sector2.set_collision_tags(["track","line"]);
     this.sector3 = world.add(new SSCD.Line(new SSCD.Vector(590,315),new SSCD.Vector(130,0)));
     this.sector3.set_collision_tags(["track","line"]);
+    this.sector4 = world.add(new SSCD.Line(new SSCD.Vector(390,115),new SSCD.Vector(0,130)));
+    this.sector4.set_collision_tags(["track","line"]); */
+    
+    
+    this.sectors.forEach(function(sector){
+      sector.collider = world.add(new SSCD.Line(new SSCD.Vector(sector.x,sector.y),new SSCD.Vector(sector.lineX,sector.lineY)));
+      sector.collider.set_collision_tags(["track","line"]);
+    });
 
   }
 } //End Class Track
 
 class Car {
-  constructor(color, startX, startY) {
-    this.keyMap={37:false,38:false,39:false,40:false};
+  constructor(playerNr,name, color, startX, startY) {
+    if (playerNr===1) this.keys=[37,39,38,40]; //Left, Right, Up, Down
+    else this.keys=[89,67,83,88];
+    this.keyMap={};
+    this.keyMap[this.keys[0]]=false;
+    this.keyMap[this.keys[1]]=false;
+    this.keyMap[this.keys[2]]=false;
+    this.keyMap[this.keys[3]]=false;
+    if (debugMode) console.log(this.keyMap);
+    //this.keyMap={37:false,38:false,39:false,40:false}; 
     this.baseAngle=270*Math.PI/180;
     //this.baseAngle=0;
     this.speedDivider = 10;
     this.steerDivider = 10;
     this.lineFactor= 2;
-    this.clearedSectors=0;
+    this.clearedSectors=-1;
     this.lapsDone=0;
+    this.name=name;
 
     this.phys = {
       x: startX,
@@ -87,18 +118,8 @@ class Car {
       y_angleTo: 0
     };	
 
-    
-    switch (color) {
-      case "red":
-        this.vis.img.src = "../images/car_red_small_5.png";
-        break;
-      default:
-        this.vis.img.src = "../images/car_red_small_5.png";
-        break;
-    }
-
-      
-      //console.log(this.phys.x_pointto+"/"+this.phys.y_pointto);
+    this.vis.img.src = "images/car_"+color+"_small_5.png";
+  
   }
 
   addCollider() {
@@ -165,7 +186,6 @@ class Car {
     
     if (this.phys.dir > Math.PI*2) this.phys.dir = this.phys.dir - Math.PI*2;
     if (this.phys.dir <= 0) this.phys.dir = this.phys.dir + Math.PI*2;
-    //this.updateVis();
 
     this.phys.x_pointto = this.phys.x+this.phys.speed*this.lineFactor * Math.cos(this.phys.dir);
     this.phys.y_pointto = this.phys.y+this.phys.speed*this.lineFactor * Math.sin(this.phys.dir);
@@ -178,10 +198,9 @@ class Car {
     this.phys.speed=0;
   }
 
-  bounce() {
+  /* bounce() {
     this.phys.dir=this.phys.dir-90*Math.PI/180;
-    
-  }
+  } */
 
   accelerate(speedDiff) {
     if (speedDiff>0) this.phys.speed=Math.min(50,this.phys.speed+=speedDiff);
@@ -219,11 +238,11 @@ class Car {
     return this.speed;
   }
 
-  checkOutOfBounds() {
+  /* checkOutOfBounds() {
     return 
-  }
+  } */
 
-  checkKeys(){
+ /*  checkKeys(){ //old version - hardcoded keys
     if (this.keyMap[37]) this.steer("left");
     if (this.keyMap[39]) this.steer("right");
     if (this.keyMap[38]) this.accelerate(5);    
@@ -233,7 +252,133 @@ class Car {
     if (!(this.keyMap[38]&&this.keyMap[40])) this.accelerate(0);
 
     //console.log(this.keyMap);
+  } */
+
+  checkKeys(){
+    if (this.keyMap[this.keys[0]]) this.steer("left");
+    if (this.keyMap[this.keys[1]]) this.steer("right");
+    if (this.keyMap[this.keys[2]]) this.accelerate(5);    
+    if (this.keyMap[this.keys[3]]) this.accelerate(-5);
+
+    if (!(this.keyMap[this.keys[0]]&&this.keyMap[this.keys[1]])) this.steer("clear");
+    if (!(this.keyMap[this.keys[2]]&&this.keyMap[this.keys[3]])) this.accelerate(0);
+
+    //console.log(this.keyMap);
   }
+
+  drawCar(context) {
+    context.save();
+    context.translate(this.vis.x, this.vis.y);
+    context.rotate(this.vis.dir);
+    context.drawImage(
+      this.vis.img,
+      0,
+      0,
+      this.vis.width,
+      this.vis.height
+    );
+    context.restore();
+  }
+
+  drawPaths(context) {
+    context.save();
+    context.strokeStyle="black";
+    context.beginPath();
+    context.moveTo(this.phys.x,this.phys.y);
+    context.lineTo(this.phys.x_pointto,this.phys.y_pointto);
+
+    context.moveTo(this.vis.x,this.vis.y);
+    context.lineTo(this.vis.x_angleTo,this.vis.y_angleTo);
+
+    context.moveTo(400,300);
+    context.lineTo(this.vis.x,this.vis.y);
+    context.stroke();
+    context.restore();
+  };
+
+  collisionHandler(track) {
+    if (world.test_collision(this.collider))
+      {
+        //console.debug("Collision!");
+        if (world.test_collision(this.collider,"boundary"))  {
+          this.stop();
+          //this.bounce();
+        }
+
+        if (world.test_collision(this.collider,"car"))  {
+          this.stop();
+          this.speed>0 ? this.accelerate(-100) : this.accelerate(100);
+          //this.bounce();
+        }
+        
+        var collidedWith = world.pick_object(this.collider);
+        if (world.test_collision(this.collider,"line"))  {
+          if (collidedWith === track.startLine) {
+            if (this.clearedSectors<track.sectorCount) {
+              this.clearedSectors=0;
+              if (debugMode) console.debug(this.name+" Start! Laps: "+this.lapsDone);
+            }
+            else {
+              if (this.lapsDone<track.lapsToDo-1) {
+                this.lapsDone++;
+                this.clearedSectors=0;
+                if (debugMode) console.debug(this.name+" Laps: "+this.lapsDone);
+              }
+              else {if (debugMode) console.debug(this.name+" finished!");}
+            }
+          }
+          for (var i=0;i<track.sectors.length;i++) {
+            if (collidedWith === track.sectors[i].collider) {
+              var msg = this.name+" "+track.sectors[i].sectorName;
+              if (this.clearedSectors === i) {
+                this.clearedSectors++;
+                msg+=" clear!";
+                if (debugMode) console.debug(msg);
+              }
+            }
+          }
+/* 
+          if (collidedWith === track.sector1) {
+            var msg = this.name+" sector1";
+            if (this.clearedSectors < 1) {
+              this.clearedSectors++;
+              msg+=" clear!";
+            }
+            if (debugMode) console.debug(msg);
+          }
+          if (collidedWith === track.sector2) {
+            var msg = this.name+" sector2";
+            if (this.clearedSectors >0 && this.clearedSectors < 2) {
+              this.clearedSectors++;
+              msg+=" clear!";
+            }
+            if (debugMode) console.debug(msg);
+          }
+          if (collidedWith === track.sector3) {
+            var msg = this.name+" sector3";
+            if (this.clearedSectors >0 && this.clearedSectors < 3) {
+              this.clearedSectors++;
+              msg+=" clear!";
+            }
+            if (debugMode) console.debug(msg);
+          }
+          if (collidedWith === track.sector4) {
+            var msg = this.name+" sector4";
+            if (this.clearedSectors >0 && this.clearedSectors < 4) {
+              this.clearedSectors++;
+              msg+=" clear!";
+            }
+            if (debugMode) console.debug(msg);
+          } */
+        }
+
+        this.collider.set_debug_render_colors("red", "red");
+        
+        collidedWith.set_debug_render_colors("blue", "blue");
+        //if (collidedWith === track.centerCollider) console.debug("Center!");
+      }
+  }
+
 
 } // End Class Car 
 
@@ -241,97 +386,24 @@ window.onload = function() {
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
   var track = new Track();
-  var playerCar = new Car("red", 385, 200);
+  var playerCars = [new Car(1,"Player 1","red", 390, 160),new Car(2,"Player 2","green", 390, 200)];
 
   function updateCanvas() {
+     
     ctx.clearRect(0, 0, 800, 600);
     ctx.drawImage(track.img, 0, 0);
-    world = new SSCD.World({grid_size: 100});
+    world = new SSCD.World({grid_size: 75});
     track.addCollider();
-    ctx.save();
     
-    if (world.test_collision(playerCar.collider))
-      {
-        //console.debug("Collision!");
-        if (world.test_collision(playerCar.collider,"boundary"))  {
-          playerCar.stop();
-          //playerCar.bounce();
-        }
-        
-        var collidedWith = world.pick_object(playerCar.collider);
-        if (world.test_collision(playerCar.collider,"line"))  {
-          if (collidedWith === track.startLine) {
-            if (playerCar.clearedSectors<track.sectorCount) console.debug("Start! Laps: "+playerCar.lapsDone);
-            else {
-              if (playerCar.lapsDone<track.lapsToDo-1) {
-                playerCar.lapsDone++;
-                playerCar.clearedSectors=0;
-                console.debug("Laps: "+playerCar.lapsDone);
-              }
-              else console.debug("Finished!");
-            }
-          }
-          if (collidedWith === track.sector1) {
-            var msg = "sector1";
-            if (playerCar.clearedSectors < 1) {
-              playerCar.clearedSectors++;
-              msg+=" clear!";
-            }
-            console.debug(msg);
-          }
-          if (collidedWith === track.sector2) {
-            var msg = "sector2";
-            if (playerCar.clearedSectors < 2) {
-              playerCar.clearedSectors++;
-              msg+=" clear!";
-            }
-            console.debug(msg);
-          }
-          if (collidedWith === track.sector3) {
-            var msg = "sector3";
-            if (playerCar.clearedSectors < 3) {
-              playerCar.clearedSectors++;
-              msg+=" clear!";
-            }
-            console.debug(msg);
-          }
-        }
 
-        playerCar.collider.set_debug_render_colors("red", "red");
-        
-        collidedWith.set_debug_render_colors("blue", "blue");
-        //if (collidedWith === track.centerCollider) console.debug("Center!");
-      }
-    playerCar.move();
-    ctx.translate(playerCar.vis.x, playerCar.vis.y);
-    ctx.rotate(playerCar.vis.dir);
-    ctx.drawImage(
-      playerCar.vis.img,
-      0,
-      0,
-      playerCar.vis.width,
-      playerCar.vis.height
-    );
-    ctx.restore();
-    ctx.beginPath();
-    ctx.moveTo(playerCar.phys.x,playerCar.phys.y);
-    ctx.lineTo(playerCar.phys.x_pointto,playerCar.phys.y_pointto);
-
-    ctx.moveTo(playerCar.vis.x,playerCar.vis.y);
-    ctx.lineTo(playerCar.vis.x_angleTo,playerCar.vis.y_angleTo);
-
-    ctx.moveTo(400,300);
-    ctx.lineTo(playerCar.vis.x,playerCar.vis.y);
-    ctx.stroke();
-
-  /*   var carBox=playerCar.drawBox();
-    carBox.forEach(function(elem){
-      ctx.beginPath();
-      ctx.arc(elem[0],elem[1],2,0,playerCar.dtr(360));
-      ctx.stroke();
-    }); */
-
-    world.render(canvas);
+    playerCars.forEach(function(playerCar){
+      playerCar.move();
+      playerCar.collisionHandler(track);
+      playerCar.drawCar(ctx);
+      if (debugMode) playerCar.drawPaths(ctx); //Debug mode: path lines 
+    });
+    
+    if (debugMode) world.render(canvas); //Debug mode: show collision detection
 
     window.requestAnimationFrame(updateCanvas);
   }
@@ -339,14 +411,18 @@ window.onload = function() {
   function startGame() {
     //var keyMap={37:false,38:false,39:false,40:false};
     document.addEventListener('keydown', function(keyPressed){
-      if (keyPressed.keyCode in playerCar.keyMap) playerCar.keyMap[keyPressed.keyCode]=true;
+      playerCars.forEach(function(playerCar){
+        if (keyPressed.keyCode in playerCar.keyMap) playerCar.keyMap[keyPressed.keyCode]=true;
+      });
     });
     
     document.addEventListener('keyup', function(keyPressed){
-      if (keyPressed.keyCode in playerCar.keyMap) playerCar.keyMap[keyPressed.keyCode]=false;
+      playerCars.forEach(function(playerCar){
+        if (keyPressed.keyCode in playerCar.keyMap) playerCar.keyMap[keyPressed.keyCode]=false;
+      });
     });
-
-    playerCar.move();
+    //if (debugMode) console.log(track.sectors);
+    //playerCar.move();
     updateCanvas();
   }
   startGame();
