@@ -1,7 +1,7 @@
 
 
 //var world = new SSCD.World({grid_size: });
-const debugMode = true;
+const debugMode = false;
 
 class TrackSector {
   constructor(sectorName,x,y,lineX,lineY){
@@ -306,7 +306,7 @@ class Car {
         }
 
         if (world.test_collision(this.collider,"car"))  {
-          this.stop();
+          //this.stop();
           this.speed>0 ? this.accelerate(-100) : this.accelerate(100);
           //this.bounce();
         }

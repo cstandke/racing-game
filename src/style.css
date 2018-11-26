@@ -33,6 +33,13 @@ body button {
 }
 
 #game-board {
-    float: left;
-    padding: 20px 0px;
+    /* float: left; */
+    width:800px;
+    height:600px;
+    margin:auto;
+    padding: 10px 0px;
+}
+
+#game-logo img {
+  width:700px;
 }
