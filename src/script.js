@@ -2,6 +2,10 @@
 
 //var world = new SSCD.World({grid_size: });
 const debugMode = false;
+var timeStart=Date.now();
+var gameFinished=false;
+var checkeredFlagImg=new Image();
+    checkeredFlagImg.src="images/checkeredFlag.jpg";
 
 class TrackSector {
   constructor(sectorName,x,y,lineX,lineY){
@@ -19,7 +23,7 @@ class Track {
     this.img = new Image();
     this.img.src = "images/racetrack.png";
     this.sectorCount = 4;
-    this.lapsToDo = 5;
+    this.lapsToDo = 5//5;
     this.sectors = [new TrackSector("sector 1",80,315,130,0),new TrackSector("sector 2",370,375,0,130),new TrackSector("sector 3",590,315,130,0),new TrackSector("sector 4",390,115,0,130)];
   }
 
@@ -91,6 +95,11 @@ class Car {
     this.clearedSectors=-1;
     this.lapsDone=0;
     this.name=name;
+    this.timeStarted;
+    this.timeFinished;
+    this.lapTotalTime;
+    this.lapTimes=[];
+    this.hasFinished=false;
 
     this.phys = {
       x: startX,
@@ -255,15 +264,21 @@ class Car {
   } */
 
   checkKeys(){
-    if (this.keyMap[this.keys[0]]) this.steer("left");
-    if (this.keyMap[this.keys[1]]) this.steer("right");
-    if (this.keyMap[this.keys[2]]) this.accelerate(5);    
-    if (this.keyMap[this.keys[3]]) this.accelerate(-5);
 
-    if (!(this.keyMap[this.keys[0]]&&this.keyMap[this.keys[1]])) this.steer("clear");
-    if (!(this.keyMap[this.keys[2]]&&this.keyMap[this.keys[3]])) this.accelerate(0);
+  if (this.hasFinished) {
+    this.steer("clear");
+    this.accelerate(0);
+    return;
+  }
+  if (this.keyMap[this.keys[0]]) this.steer("left");
+  if (this.keyMap[this.keys[1]]) this.steer("right");
+  if (this.keyMap[this.keys[2]]) this.accelerate(5);    
+  if (this.keyMap[this.keys[3]]) this.accelerate(-5);
 
-    //console.log(this.keyMap);
+  if (!(this.keyMap[this.keys[0]]&&this.keyMap[this.keys[1]])) this.steer("clear");
+  if (!(this.keyMap[this.keys[2]]&&this.keyMap[this.keys[3]])) this.accelerate(0);
+
+  //console.log(this.keyMap);
   }
 
   drawCar(context) {
@@ -319,12 +334,19 @@ class Car {
               if (debugMode) console.debug(this.name+" Start! Laps: "+this.lapsDone);
             }
             else {
-              if (this.lapsDone<track.lapsToDo-1) {
-                this.lapsDone++;
-                this.clearedSectors=0;
-                if (debugMode) console.debug(this.name+" Laps: "+this.lapsDone);
+              this.lapsDone++;
+              this.clearedSectors=0;
+              this.lapTimes.push(Date.now()-this.lapTotalTime);
+              this.lapTotalTime=Date.now();
+              //console.log(this.lapTotalTime);
+              if (debugMode) console.debug(this.name+" Laps: "+this.lapsDone+", Lap time: " + timeToString(this.lapTimes[this.lapTimes.length-1]));
+              if (this.lapsDone>=track.lapsToDo) { 
+                this.timeFinished=Date.now()-this.timeStarted;
+                this.hasFinished=true;
+                if (debugMode) {
+                  console.debug(this.name+" finished! Total Time: "+timeToString(this.timeFinished));
+                }
               }
-              else {if (debugMode) console.debug(this.name+" finished!");}
             }
           }
           for (var i=0;i<track.sectors.length;i++) {
@@ -337,39 +359,6 @@ class Car {
               }
             }
           }
-/* 
-          if (collidedWith === track.sector1) {
-            var msg = this.name+" sector1";
-            if (this.clearedSectors < 1) {
-              this.clearedSectors++;
-              msg+=" clear!";
-            }
-            if (debugMode) console.debug(msg);
-          }
-          if (collidedWith === track.sector2) {
-            var msg = this.name+" sector2";
-            if (this.clearedSectors >0 && this.clearedSectors < 2) {
-              this.clearedSectors++;
-              msg+=" clear!";
-            }
-            if (debugMode) console.debug(msg);
-          }
-          if (collidedWith === track.sector3) {
-            var msg = this.name+" sector3";
-            if (this.clearedSectors >0 && this.clearedSectors < 3) {
-              this.clearedSectors++;
-              msg+=" clear!";
-            }
-            if (debugMode) console.debug(msg);
-          }
-          if (collidedWith === track.sector4) {
-            var msg = this.name+" sector4";
-            if (this.clearedSectors >0 && this.clearedSectors < 4) {
-              this.clearedSectors++;
-              msg+=" clear!";
-            }
-            if (debugMode) console.debug(msg);
-          } */
         }
 
         this.collider.set_debug_render_colors("red", "red");
@@ -382,6 +371,28 @@ class Car {
 
 } // End Class Car 
 
+function timeToString(time) {
+  var mm = Math.floor(time/60000);
+  var ss = Math.floor(time/1000-mm*60);
+  var ms = Math.floor(time%1000/10);
+  if (mm < 10) {mm = "0"+mm;}
+  if (ss < 10) {ss = "0"+ss;}
+  if (ms < 10) {ms = "0"+ms;}
+  // This formats your string to MM:SS:MS
+  var t = mm+":"+ss+":"+ms;
+  return t;
+}
+
+function drawTime(context) {
+  context.save();
+  //context.fillStyle="rgba(255,255,255,128)";
+  //context.fillRect(500,20,250,50);
+  context.font="22px Arial black";
+  context.fillStyle="white";
+  context.fillText(timeToString(Date.now()-timeStart),600,30);
+  context.restore();
+}
+
 window.onload = function() {
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
@@ -389,7 +400,7 @@ window.onload = function() {
   var playerCars = [new Car(1,"Player 1","red", 390, 160),new Car(2,"Player 2","green", 390, 200)];
 
   function updateCanvas() {
-     
+    var allCarsFinished=true;
     ctx.clearRect(0, 0, 800, 600);
     ctx.drawImage(track.img, 0, 0);
     world = new SSCD.World({grid_size: 75});
@@ -401,12 +412,51 @@ window.onload = function() {
       playerCar.collisionHandler(track);
       playerCar.drawCar(ctx);
       if (debugMode) playerCar.drawPaths(ctx); //Debug mode: path lines 
+      allCarsFinished = playerCar.hasFinished && allCarsFinished;
     });
     
-    if (debugMode) world.render(canvas); //Debug mode: show collision detection
+    drawTime(ctx);
 
-    window.requestAnimationFrame(updateCanvas);
+    if (debugMode) world.render(canvas); //Debug mode: show collision detection
+  
+    if (!(allCarsFinished)) window.requestAnimationFrame(updateCanvas);
+    else showFinishScreen(ctx);
   }
+
+  function showFinishScreen(context) {
+    
+    //context.save();
+    context.clearRect(0, 0, 800, 600);
+    context.drawImage(track.img, 0, 0);
+    playerCars.forEach(function(playerCar){playerCar.drawCar(context);});
+    context.globalAlpha=0.6;
+    //checkeredFlagImg.onload= function() {
+      context.drawImage(checkeredFlagImg,50,100,700,407);
+    //};
+    context.fillStyle="white";
+    context.globalAlpha=0.4;
+    context.fillRect(50,100,700,407);
+    context.fillStyle="black";
+    for (i=0;i<playerCars.length;i++) {
+      var playerCar=playerCars[i];
+      context.font="30px Arial Black";
+      context.globalAlpha=1;
+      context.fillText(playerCar.name,150+i*300,170);
+      context.fillText(timeToString(playerCar.timeFinished),150+i*300,205);
+      context.fillText("Lap Times",150+i*300,260);
+      for (i2=0;i2<playerCar.lapTimes.length;i2++) {
+        console.log(playerCar.lapTimes[i2]);
+        context.font="20px Arial Black";
+        context.fillText(timeToString(playerCar.lapTimes[i2]),150+i*300,290+i2*30);
+        
+      } 
+    } 
+
+    //context.restore();
+    //ctx.drawImage(checkeredFlagImg,50,50);
+    //window.requestAnimationFrame(showFinishScreen(ctx));
+  }
+
 
   function startGame() {
     //var keyMap={37:false,38:false,39:false,40:false};
@@ -423,7 +473,15 @@ window.onload = function() {
     });
     //if (debugMode) console.log(track.sectors);
     //playerCar.move();
+    
+    playerCars.forEach(function(playerCar){
+      playerCar.timeStarted = timeStart;
+      playerCar.lapTotalTime=timeStart;
+      //console.log(playerCar.timeStarted);
+    })
     updateCanvas();
+    //console.log("finishScreen");
+    //showFinishScreen(ctx);
   }
   startGame();
 };
