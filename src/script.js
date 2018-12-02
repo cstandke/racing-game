@@ -375,21 +375,32 @@ function timeToString(time) {
   return t;
 }
 
-function drawTime(context) {
-  context.save();
-  //context.fillStyle="rgba(255,255,255,128)";
-  //context.fillRect(500,20,250,50);
-  context.font="22px Arial black";
-  context.fillStyle="white";
-  context.fillText(timeToString(Date.now()-timeStart),600,30);
-  context.restore();
-}
+
 
 window.onload = function() {
   var canvas = document.getElementById("canvas");
   var ctx = canvas.getContext("2d");
   var track = new Track();
   var playerCars = [new Car(1,"Player 1","red", 390, 160),new Car(2,"Player 2","green", 390, 200)];
+
+  function drawTime() {
+    ctx.save();
+    ctx.globalAlpha=0.7;
+    ctx.fillStyle="white";
+    ctx.fillRect(605,15,180,35+playerCars.length*22);
+    ctx.globalAlpha=1;
+    //context.fillStyle="rgba(255,255,255,128)";
+    //context.fillRect(500,20,250,50);
+    ctx.font="20px Arial black";
+    ctx.fillStyle="black";
+    ctx.fillText(timeToString(Date.now()-timeStart),610,35);
+    ctx.font="18px Arial black";
+    for (i=0;i<playerCars.length;i++) {
+      var playerCar=playerCars[i];
+      ctx.fillText(playerCar.name+": Lap "+playerCar.lapsDone+"/"+track.lapsToDo,610,60+i*22);
+    }
+    ctx.restore();
+  }
 
   function updateCanvas() {
     var allCarsFinished=true;
@@ -407,7 +418,7 @@ window.onload = function() {
       allCarsFinished = playerCar.hasFinished && allCarsFinished;
     });
     
-    drawTime(ctx);
+    drawTime();
 
     if (debugMode) world.render(canvas); //Debug mode: show collision detection
   
@@ -434,12 +445,13 @@ window.onload = function() {
       context.font="30px Arial Black";
       context.globalAlpha=1;
       context.fillText(playerCar.name,150+i*300,170);
-      context.fillText(timeToString(playerCar.timeFinished),150+i*300,205);
+      context.fillText(timeToString(playerCar.timeFinished),150+i*300,210);
+      context.font="24px Arial Black";
       context.fillText("Lap Times",150+i*300,260);
       for (i2=0;i2<playerCar.lapTimes.length;i2++) {
         console.log(playerCar.lapTimes[i2]);
         context.font="20px Arial Black";
-        context.fillText(timeToString(playerCar.lapTimes[i2]),150+i*300,290+i2*30);
+        context.fillText(timeToString(playerCar.lapTimes[i2]),150+i*300,300+i2*30);
         
       } 
     } 
