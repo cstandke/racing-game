@@ -1,6 +1,7 @@
 body {
   padding: 0;
   text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .game-intro {
@@ -38,8 +39,88 @@ body button {
     height:600px;
     margin:auto;
     padding: 10px 0px;
+    display:none;
 }
 
 #game-logo img {
   width:700px;
+}
+
+#start-screen {
+  width:800px;
+  height:600px;
+  margin:auto;
+  padding: 10px 0px;
+  /* padding-left:200px; */
+}
+
+#start-screen h1{
+  text-align:center;
+  font-weight:900;
+  display:block;
+  margin:50px auto 20px auto;
+}
+
+#start-screen #container {
+  display:inline-block;
+  margin:auto;
+}
+
+#start-screen  ul {
+  padding:0 20px 0 0;
+  width:80px;
+  list-style-type:none;
+  float:left;
+}
+
+#start-screen li {
+  /* float:left; */
+  display:block;
+  height: 50px;
+  margin-top: auto;
+  text-align:left;
+  box-sizing:border-box;
+}
+
+#start-screen .heading {
+  font-weight:600;
+}
+
+#start-screen #table-description {
+  padding:0 80px 0 0;
+}
+
+#start-screen #table-description li{
+  margin:0;
+  padding-top:10px;
+}
+
+#start-screen img {
+  width:50px;
+  height:50px;
+}
+
+#clearfix {clear:both;}
+
+#start-message {
+  clear:both;
+  display:inline-block;
+  margin:30px auto;
+  font-size: 18pt;
+  font-weight:600;
+}
+
+#start-message div{
+  display:inline-block;
+  float:left;
+  margin-right:10px;
+}
+
+#start-message .text {
+  margin-top:10px;
+}
+
+#start-message img {
+  width:auto;
+  display:inline-block;
 }

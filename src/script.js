@@ -1,8 +1,6 @@
 
-
-//var world = new SSCD.World({grid_size: });
-const debugMode = false;
-var timeStart=Date.now();
+const debugMode = true;
+var timeStart;
 var gameFinished=false;
 var checkeredFlagImg=new Image();
     checkeredFlagImg.src="images/checkeredFlag.jpg";
@@ -24,7 +22,10 @@ class Track {
     this.img.src = "images/racetrack.png";
     this.sectorCount = 4;
     this.lapsToDo = 5//5;
-    this.sectors = [new TrackSector("sector 1",80,315,130,0),new TrackSector("sector 2",370,375,0,130),new TrackSector("sector 3",590,315,130,0),new TrackSector("sector 4",390,115,0,130)];
+    this.sectors = [new TrackSector("sector 1",80,315,130,0),
+                    new TrackSector("sector 2",370,375,0,130),
+                    new TrackSector("sector 3",590,315,130,0),
+                    new TrackSector("sector 4",390,115,0,130)];
   }
 
   addCollider() {
@@ -57,16 +58,7 @@ class Track {
     this.edgeCollider.set_collision_tags(["track","boundary"]);
 
     this.startLine = world.add(new SSCD.Line(new SSCD.Vector(370,115),new SSCD.Vector(0,130)));
-    this.startLine.set_collision_tags(["track","line"]);
-    /* this.sector1 = world.add(new SSCD.Line(new SSCD.Vector(80,315),new SSCD.Vector(130,0)));
-    this.sector1.set_collision_tags(["track","line"]);
-    this.sector2 = world.add(new SSCD.Line(new SSCD.Vector(370,375),new SSCD.Vector(0,130)));
-    this.sector2.set_collision_tags(["track","line"]);
-    this.sector3 = world.add(new SSCD.Line(new SSCD.Vector(590,315),new SSCD.Vector(130,0)));
-    this.sector3.set_collision_tags(["track","line"]);
-    this.sector4 = world.add(new SSCD.Line(new SSCD.Vector(390,115),new SSCD.Vector(0,130)));
-    this.sector4.set_collision_tags(["track","line"]); */
-    
+    this.startLine.set_collision_tags(["track","line"]);    
     
     this.sectors.forEach(function(sector){
       sector.collider = world.add(new SSCD.Line(new SSCD.Vector(sector.x,sector.y),new SSCD.Vector(sector.lineX,sector.lineY)));
@@ -79,7 +71,7 @@ class Track {
 class Car {
   constructor(playerNr,name, color, startX, startY) {
     if (playerNr===1) this.keys=[37,39,38,40]; //Left, Right, Up, Down
-    else this.keys=[89,67,83,88];
+    else this.keys=[65,68,87,83]; //a, d, w, s
     this.keyMap={};
     this.keyMap[this.keys[0]]=false;
     this.keyMap[this.keys[1]]=false;
@@ -459,16 +451,32 @@ window.onload = function() {
 
 
   function startGame() {
+    
+    var startMessage = document.getElementById('start-screen');
+    startMessage.style.display="none";
+    
+    var gameBoard = document.getElementById('game-board');
+    gameBoard.style.display="initial";
+    timeStart=Date.now();
+
+    //document.removeEventListener('keydown');
+
     //var keyMap={37:false,38:false,39:false,40:false};
     document.addEventListener('keydown', function(keyPressed){
       playerCars.forEach(function(playerCar){
-        if (keyPressed.keyCode in playerCar.keyMap) playerCar.keyMap[keyPressed.keyCode]=true;
+        if (keyPressed.keyCode in playerCar.keyMap) {
+          keyPressed.preventDefault();
+          playerCar.keyMap[keyPressed.keyCode]=true;
+        }
       });
     });
     
     document.addEventListener('keyup', function(keyPressed){
       playerCars.forEach(function(playerCar){
-        if (keyPressed.keyCode in playerCar.keyMap) playerCar.keyMap[keyPressed.keyCode]=false;
+        if (keyPressed.keyCode in playerCar.keyMap) {
+          keyPressed.preventDefault();
+          playerCar.keyMap[keyPressed.keyCode]=false;
+        }
       });
     });
     //if (debugMode) console.log(track.sectors);
@@ -483,5 +491,13 @@ window.onload = function() {
     //console.log("finishScreen");
     //showFinishScreen(ctx);
   }
-  startGame();
+  
+  document.addEventListener('keydown', function(keyPressed){
+    if (keyPressed.keyCode===32) {
+      keyPressed.preventDefault();
+      if (debugMode) console.debug("Game Started!")
+      startGame();
+    }
+  },{once:true});
+  
 };
