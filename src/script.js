@@ -1,5 +1,5 @@
 
-const debugMode = true;
+const debugMode = false;
 var timeStart;
 var gameFinished=false;
 var checkeredFlagImg=new Image();
