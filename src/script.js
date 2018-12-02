@@ -391,10 +391,10 @@ window.onload = function() {
     ctx.globalAlpha=1;
     //context.fillStyle="rgba(255,255,255,128)";
     //context.fillRect(500,20,250,50);
-    ctx.font="20px Arial black";
+    ctx.font="20px Arial Black";
     ctx.fillStyle="black";
     ctx.fillText(timeToString(Date.now()-timeStart),610,35);
-    ctx.font="18px Arial black";
+    ctx.font="18px Arial Black";
     for (i=0;i<playerCars.length;i++) {
       var playerCar=playerCars[i];
       ctx.fillText(playerCar.name+": Lap "+playerCar.lapsDone+"/"+track.lapsToDo,610,60+i*22);
